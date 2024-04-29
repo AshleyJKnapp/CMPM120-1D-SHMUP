@@ -24,15 +24,16 @@ class Player extends Phaser.GameObjects.Sprite {
         // Moving left
         if (this.left.isDown || this.altLeft.isDown) {
             // Check to make sure the sprite can actually move left
-            if (this.x > (this.displayWidth/2)) {
+            if (this.x > (this.displayWidth/2)+25) {
                 this.x -= this.playerSpeed;
             }
         }
+        
 
         // Moving right
         if (this.right.isDown || this.altRight.isDown) {
             // Check to make sure the sprite can actually move right
-            if (this.x < (game.config.width - (this.displayWidth/2))) {
+            if (this.x < (game.config.width - (this.displayWidth/2))-25) {
                 this.x += this.playerSpeed;
             }
         }
