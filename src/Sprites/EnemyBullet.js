@@ -1,4 +1,4 @@
-class Bullet extends Phaser.GameObjects.Sprite {
+class EnemyBullet extends Phaser.GameObjects.Sprite {
     constructor(scene, x, y, texture, frame) {        
         super(scene, x, y, texture, frame);
         this.visible = false;

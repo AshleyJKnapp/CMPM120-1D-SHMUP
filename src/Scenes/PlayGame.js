@@ -6,10 +6,6 @@ class PlayGame extends Phaser.Scene {
         this.bulletCooldown = 5;        // Number of update() calls to wait before making a new bullet
         this.bulletCooldownCounter = 0;
 
-        // Event handling
-        // Polling
-        this.leftKey = null;
-        this.rightKey = null;
     }
 
     // Use preload to load art and sound assets before the scene starts running.
@@ -27,8 +23,6 @@ class PlayGame extends Phaser.Scene {
         // Bullet (might load more later)
         this.load.image("googA", "googly-a.png");
 
-        // update instruction text
-        // document.getElementById('description').innerHTML = '<h2>Smiley.js</h2>'
     }
 
     create() {
@@ -44,7 +38,7 @@ class PlayGame extends Phaser.Scene {
         my.sprite.player.rotation = -1;
 
         // Create group for player bullet
-        my.sprite.bulletGroup = this.add.group({
+        my.sprite.pBulletGroup = this.add.group({
             defaultKey: "googA",
             maxSize: 10
             }
@@ -54,56 +48,85 @@ class PlayGame extends Phaser.Scene {
         // Create all of the bullets at once, and set them to inactive
         // See more configuration options here:
         // https://rexrainbow.github.io/phaser3-rex-notes/docs/site/group/
-        my.sprite.bulletGroup.createMultiple({
+        my.sprite.pBulletGroup.createMultiple({
             active: false,
-            key: my.sprite.bulletGroup.defaultKey,
-            repeat: my.sprite.bulletGroup.maxSize-1
+            visible: false,
+            key: my.sprite.pBulletGroup.defaultKey,
+            repeat: my.sprite.pBulletGroup.maxSize-1,
+            // setXY: { x: -15, y: -15 },
+            setScale: { x: .1, y: .1 }
         });
 
         // -------- Input handling --------
         // -- Movement --
         // (A) Move Left Polling
-        this.leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.aKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+        this.leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         
         // (D) Move Right Polling
-        this.rightKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        this.dKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+        this.rightKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
+
+        // this.player = new Player(this, game.config.width/2, game.config.height - 150, "yellowHand", 0, this.aKey, this.leftKey, this.dKey, this.rightKey, this.playerSpeed);
+        // my.sprite.player.rotation = -1;
+
 
         // -- Player Bullets --
         // (Space) fire/shoot single event
-        let fKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
-        fKey.on('down', (key, event) => {
-            console.log("SPACE key (event)");
-            bNum++; // Add how many bullets exist
-            my.sprite.bullet[bNum] = this.add.sprite(my.sprite.player.x-10, my.sprite.player.y-40, "googA");
-            my.sprite.bullet[bNum].setScale(.1);
-            // console.log(my.sprite.bullet);
+        // Don't want the player to press and hold
+        this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
+        this.spaceKey.on('down', (key, event) => {
+            // Get the first inactive bullet and make it active
+            let bullet = my.sprite.pBulletGroup.getFirstDead();
+            // Bullet will be null if there are no inactive bullets
+            if (bullet != null){
+                bullet.active = true;
+                bullet.visible = true;
+                bullet.x = my.sprite.player.x-10;
+                bullet.y = my.sprite.player.y-30;
+                this.bulletCooldownCounter = this.bulletCooldown;
+            }
         })
     }
 
     update() {
         let my = this.my;    // create an alias to this.my for readability
+        this.bulletCooldownCounter--;
 
-        // For every bullet on the screen, move up
-        // console.log("# of Bullets: " + bNum);
-        if (bNum >= 0){
-            for (let i = 0; i <= bNum; i++){
-                if (my.sprite.bullet[i].y < -25) {
-                    my.sprite.bullet[i].destroy(true);
-                    // bNum--; // Decrease how many bullets exist
-                } else {;
-                    my.sprite.bullet[i].y -= 15;
-                }
+        // Check for bullet being fired
+        // *Moved to create() for a single event because I do not want polling input/press and hold to fire
+        // if (this.spaceKey.isDown){
+        //     console.log("SpaceKey Down");
+        //     // Get the first inactive bullet and make it active
+        //     let bullet = my.sprite.pBulletGroup.getFirstDead();
+        //     // Bullet will be null if there are no inactive bullets
+        //     if (bullet != null){
+        //         console.log("Setting Bullet to Active");
+        //         bullet.active = true;
+        //         bullet.visible = true;
+        //         bullet.x = my.sprite.player.x-10;
+        //         bullet.y = my.sprite.player.y-30;
+        //         this.bulletCooldownCounter = this.bulletCooldown;
+        //     }
+        // }
 
-                // Known issue: destroyed sprites technically still exist in the bullet array. However, they are not being moved all the time
+        // Check for bullet offscreen
+        for (let bullet of my.sprite.pBulletGroup.getChildren()){
+            if (bullet.y < -(bullet.displayHeight-2)){
+                bullet.active = false;
+                bullet.visible = false;
             }
         }
+
+        // Move bullets
+        my.sprite.pBulletGroup.incY(-this.playerBulletSpeed);
         
 
-        if (this.leftKey.isDown){
+        if (this.aKey.isDown || this.leftKey.isDown){
             // Check to make sure the sprite can actually move left
             if (my.sprite.player.x > (my.sprite.player.displayWidth/2)+25) {
                 // console.log("MoveLeft: Complete");
-                my.sprite.player.x -= playerMoveSpeed;
+                my.sprite.player.x -= this.playerSpeed;
             }
 
             // If player is multiple parts:
@@ -112,11 +135,11 @@ class PlayGame extends Phaser.Scene {
             // }
         }
        
-        if (this.rightKey.isDown){
+        if (this.dKey.isDown || this.rightKey.isDown){
             // Check to make sure the sprite can actually move right
             if (my.sprite.player.x < (game.config.width - (my.sprite.player.displayWidth/2))-25) {
                 // console.log("MoveRight: Complete");
-                my.sprite.player.x += playerMoveSpeed;
+                my.sprite.player.x += this.playerSpeed;
             }
 
             // If player is multiple parts:
