@@ -1,4 +1,6 @@
 class PlayerBullet extends Phaser.GameObjects.Sprite {
+    // bullet cooldown (?), bulletcooldowncounter(?), 
+
     constructor(scene, x, y, texture, frame) {        
         super(scene, x, y, texture, frame);
         this.visible = false;
