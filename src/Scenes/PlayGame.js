@@ -1,4 +1,5 @@
 var points = 0;
+var highScore = 0;
 class PlayGame extends Phaser.Scene {
     constructor() {
         super("playScene");
@@ -256,8 +257,11 @@ class PlayGame extends Phaser.Scene {
         let escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC)
         escKey.on('down', (key, event) => {
             // console.log("esc key");
-            this.scene.pause();
-            this.scene.start('pauseScreen');
+            if (points > highScore){
+                highScore = points;
+            }
+            // this.scene.pause();
+            this.scene.start('endScreen');
         })
     }
 // ----------------------------------------------------------------------------------------
@@ -328,7 +332,7 @@ class PlayGame extends Phaser.Scene {
             }
 
             // if (pinkEnemy.active == true && this.collides(pinkEnemy, bullet)){
-                
+
             // }
             
         }
@@ -339,7 +343,10 @@ class PlayGame extends Phaser.Scene {
             // If game is complete: stop
             // Else: proceed as normal
             if (this.waveNum == this.maxWaves){
-                this.scene.start('pauseScreen'); //temp scene
+                if (points > highScore){
+                    highScore = points;
+                }
+                this.scene.start('endScreen');
             } else {
                 this.numDeafeat = 0;
                 this.redEnemyGroup = this.waveGroups[this.waveNum][0];

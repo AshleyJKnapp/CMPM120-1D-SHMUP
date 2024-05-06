@@ -25,7 +25,7 @@ let config = {
     // Edited
     width: 600,
     height: 800,
-    scene: [PlayGame, PauseScreen],
+    scene: [PlayGame, EndScreen],
     fps: {forceSetTimeOut: true, target: 30}
 }
 
