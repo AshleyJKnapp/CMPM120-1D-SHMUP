@@ -12,6 +12,35 @@ class PlayGame extends Phaser.Scene {
         this.playerSpeed = 18;
         this.playerBulletSpeed = 25;
 
+        // Locations of enemies on a sort of grid
+        this.gridArr = [
+            [80, 50],
+            [80, 150],
+            [80, 250],
+            [80, 350],
+            [(game.config.width/3)-7, 50],
+            [(game.config.width/3)-7, 150],
+            [(game.config.width/3)-7, 250],
+            [(game.config.width/3)-7, 350],
+            [(game.config.width/2)-15, 50],
+            [(game.config.width/2)-15, 150],
+            [(game.config.width/2)-15, 250],
+            [(game.config.width/2)-15, 350],
+            [(game.config.width-200), 50],
+            [(game.config.width-200), 150],
+            [(game.config.width-200), 250],
+            [(game.config.width-200), 350],
+            [(game.config.width-100), 50],
+            [(game.config.width-100), 150],
+            [(game.config.width-100), 250],
+            [(game.config.width-100), 350]
+        ]
+
+        this.redEnemyGroup = [];
+        this.blueEnemyGroup = [];
+        this.waveNum = 0;
+        this.maxWaves = 4;
+
         // Timer
         this.timer = 0;
 
@@ -24,6 +53,9 @@ class PlayGame extends Phaser.Scene {
         // https://kenney.nl/assets/googly-eyes
         // https://kenney.nl/assets/shape-characters
         // https://kenney.nl/assets/rolling-ball-assets
+        // Some assets are edited (googly eyes onto shapes, shape animation images squished)
+        // Heart asset created by me
+        // All edits and assets by me took less than 10 mins time total
 
         this.load.setPath("./assets/");
         
@@ -58,6 +90,7 @@ class PlayGame extends Phaser.Scene {
     }
 // ----------------------------------------------------------------------------------------
     create() {
+        this.reset();
         let my = this.my;   // create an alias to this.my for readability
 
         // --------== Background Tiles ==---------
@@ -119,8 +152,101 @@ class PlayGame extends Phaser.Scene {
         });
         my.sprite.pBulletGroup.propertyValueSet("speed", this.playerBulletSpeed);
 
-        // --------== Spawning in waves ==----------
-        this.wave1(this);
+        // --------== ENEMIES ==----------
+        // --------== 1HP ==--------
+        // Create death animation
+        this.anims.create({
+            key: "redDie",
+            frames: [
+                { key: "redDie0" },
+                { key: "redDie1" },
+                { key: "redDie2" },
+            ],
+            framerate: 1,
+            hideOnComplete: true
+        });
+
+        // Create Wave Group 1
+        my.sprite.redEnemyW1 = this.add.group({
+            // classType: EnemyTwoHP,
+            defaultKey: "redCir0",
+            maxSize: 2,
+            runChildUpdate: true
+        })
+        // Create Wave Group 2
+        my.sprite.redEnemyW2 = this.add.group({
+            // classType: EnemyTwoHP,
+            defaultKey: "redCir0",
+            maxSize: 4,
+            runChildUpdate: true
+        })
+        // Create Wave Group 3
+        my.sprite.redEnemyW3 = this.add.group({
+            // classType: EnemyTwoHP,
+            defaultKey: "redCir0",
+            maxSize: 1,
+            runChildUpdate: true
+        })
+        // Create Wave Group 4
+        my.sprite.redEnemyW4 = this.add.group({
+            // classType: EnemyTwoHP,
+            defaultKey: "redCir0",
+            maxSize: 4,
+            runChildUpdate: true
+        })
+
+
+        // --------== 2HP ==--------
+        // Create death animation
+        this.anims.create({
+            key: "blueDie",
+            frames: [
+                { key: "blueDie0" },
+                { key: "blueDie1" },
+                { key: "blueDie2" },
+            ],
+            framerate: 1,
+            hideOnComplete: true
+        });
+        
+        // Create Wave Group 1
+        my.sprite.blueEnemyW1 = this.add.group({
+            // classType: EnemyTwoHP,
+            defaultKey: "blueSq0",
+            maxSize: 1,
+            runChildUpdate: true
+        })
+        // Create Wave Group 2
+        my.sprite.blueEnemyW2 = this.add.group({
+            // classType: EnemyTwoHP,
+            defaultKey: "blueSq0",
+            maxSize: 1,
+            runChildUpdate: true
+        })
+        // Create Wave Group 3
+        my.sprite.blueEnemyW3 = this.add.group({
+            // classType: EnemyTwoHP,
+            defaultKey: "blueSq0",
+            maxSize: 3,
+            runChildUpdate: true
+        })
+        // Create Wave Group 4
+        my.sprite.blueEnemyW4 = this.add.group({
+            // classType: EnemyTwoHP,
+            defaultKey: "blueSq0",
+            maxSize: 4,
+            runChildUpdate: true
+        })
+
+        // --------== Spawn in first wave ==----------
+        this.waveGroups = [[my.sprite.redEnemyW1, my.sprite.blueEnemyW1], [my.sprite.redEnemyW2, my.sprite.blueEnemyW2], [my.sprite.redEnemyW3, my.sprite.blueEnemyW3], [my.sprite.redEnemyW4, my.sprite.blueEnemyW4]]
+        this.redEnemyGroup = this.waveGroups[0][0];
+        this.blueEnemyGroup = this.waveGroups[0][1];
+
+        this.wave(this, my.sprite.redEnemyW1, my.sprite.blueEnemyW1);
+        this.waveSize = my.sprite.redEnemyW1.maxSize + my.sprite.blueEnemyW1.maxSize;
+        
+        
 
         // -----= Menu =-----
         // (Esc)
@@ -136,7 +262,7 @@ class PlayGame extends Phaser.Scene {
         let my = this.my;    // create an alias to this.my for readability
         this.timer++;
         this.bulletCooldownCounter--;
-
+        
         // BG Scroll Brown
         // my.sprite.bgBrown.tilePositionY -= 8;
         // my.sprite.bgBrown.tilePositionX += .5; 
@@ -164,12 +290,10 @@ class PlayGame extends Phaser.Scene {
         }
 
 
-
-
         // Check for bullet hitting active enemy
         for (let bullet of my.sprite.pBulletGroup.getChildren()) {
             // Check 2HP enemies
-            for (let enemy of my.sprite.blueEnemyGroup.getChildren()){
+            for (let enemy of this.blueEnemyGroup.getChildren()){
                 if (enemy.active == true && this.collides(enemy, bullet)){
                     // console.log("enemy hit");
                     if (enemy.getHP() == 2){
@@ -187,7 +311,7 @@ class PlayGame extends Phaser.Scene {
             }
 
             // Check 1HP enemies
-            for (let enemy of my.sprite.redEnemyGroup.getChildren()){
+            for (let enemy of this.redEnemyGroup.getChildren()){
                 if (enemy.active == true && this.collides(enemy, bullet)){
                     // console.log("enemy hit");
                     enemy.onDeath();
@@ -202,79 +326,67 @@ class PlayGame extends Phaser.Scene {
             
         }
 
+        // Select current active wave
+        if (this.waveSize == this.numDeafeat) {
+            this.waveNum++;
+            // If game is complete: stop
+            // Else: proceed as normal
+            if (this.waveNum == this.maxWaves){
+                this.scene.start('pauseScreen'); //temp scene
+            } else {
+                this.numDeafeat = 0;
+                this.redEnemyGroup = this.waveGroups[this.waveNum][0];
+                this.blueEnemyGroup = this.waveGroups[this.waveNum][1];
+                this.waveSize = this.redEnemyGroup.maxSize + this.blueEnemyGroup.maxSize;
+
+                for (let enemy of this.redEnemyGroup.getChildren()){
+                    enemy.active = true;
+                }
+                for (let enemy of this.blueEnemyGroup.getChildren()){
+                    enemy.active = true;
+                }
+                // Call Next Wave
+                this.wave(this, this.redEnemyGroup, this.blueEnemyGroup);
+            }
+        }
+        
         my.sprite.player.update();
     }
 // ----------------------------------------------------------------------------------------
 // -------------------== WAVES ==-------------------
-wave1(thisParam){
+// This was originally going to be in create() but took up a lot of space
+// I could make a function that takes params to make waves if I take more time to do so
+// For now, theres going to be a bit of repeated code in each wave
+wave(thisParam, redEnemyGroup, blueEnemyGroup){
     let thisOG = thisParam;
     let my = thisOG.my;
-
+    
+    // Possible Initial Location of all enemies
+    let startArr = this.gridArr.slice(0);
+    
     // --------== 1HP ==--------
-    // Create death animation
-    thisOG.anims.create({
-        key: "redDie",
-        frames: [
-            { key: "redDie0" },
-            { key: "redDie1" },
-            { key: "redDie2" },
-        ],
-        framerate: 1,
-        hideOnComplete: true
-    });
-    
-    // Initial Location of all 3 Reds
-    let redStartArr = [[80, 50], [(game.config.width/2)-15, 350], [game.config.width-100, 150]]
-    
-    // Create Group
-    my.sprite.redEnemyGroup = thisOG.add.group({
-        // classType: EnemyTwoHP,
-        defaultKey: "redCir0",
-        maxSize: 4,
-        runChildUpdate: true
-    })
-
     /// Manually add custom sprites to group
     // For a sort of randomized element to the paths picked
     // Random paths are picked from an array
     // Paths are simple, moving from the top of the screen down to a fixed point
-    for (let i = 0; i < 3;  i++){
+    for (let i = 0; i < redEnemyGroup.maxSize;  i++){
         // Create sprites that are referenced by the enemy
         let dSprite = thisOG.add.sprite(-50, -50, "redDie0");
+        // Pick paths of enemies
+        let delIdx = Math.floor(Math.random()*startArr.length);
+        let start = startArr[delIdx];
+        startArr.splice(delIdx, 1)
         // Create enemy and add to group
-        let enemSpr = new EnemyOneHP(thisOG, redStartArr[i][0], -50, "redCir0", 0, dSprite, "redDie", redStartArr[i][1])
-        my.sprite.redEnemyGroup.add(enemSpr);
+        let enemSpr = new EnemyOneHP(thisOG, start[0], -50, "redCir0", 0, dSprite, "redDie", start[1])
+        redEnemyGroup.add(enemSpr);
     }
 
     // --------== 2HP ==--------
-    // Create death animation
-    this.anims.create({
-        key: "blueDie",
-        frames: [
-            { key: "blueDie0" },
-            { key: "blueDie1" },
-            { key: "blueDie2" },
-        ],
-        framerate: 1,
-        hideOnComplete: true
-    });
-    
-    // Initial Location of all 3 Blues
-    let blueStartArr = [[game.config.width/2, 250], [game.config.width/3, 50], [game.config.width-100, 350]]
-    
-    // Create Group
-    my.sprite.blueEnemyGroup = this.add.group({
-        // classType: EnemyTwoHP,
-        defaultKey: "blueSq0",
-        maxSize: 3,
-        runChildUpdate: true
-    })
-
     /// Manually add custom sprites to group
     // For a sort of randomized element to the paths picked
     // Random paths are picked from an array
     // Paths are simple, moving from the top of the screen down to a fixed point
-    for (let i = 0; i < 3;  i++){
+    for (let i = 0; i < blueEnemyGroup.maxSize;  i++){
         // Create sprites that are referenced by the enemy
         let hSprite = this.add.sprite(-50, -50, "blueSq1");
         let dSprite = this.add.sprite(-50, -50, "blueDie0");
@@ -283,11 +395,16 @@ wave1(thisParam){
         if (decider) {
             hSprite = this.add.sprite(-50, -50, "blueSq2");
         }
+        // Pick paths of enemies
+        let delIdx = Math.floor(Math.random()*startArr.length);
+        let start = startArr[delIdx];
+        startArr.splice(delIdx, 1)
         // Create enemy and add to group
-        let enemSpr = new EnemyTwoHP(this, blueStartArr[i][0], 60, "blueSq0", 0, hSprite, dSprite, "blueDie", blueStartArr[i][1])
-        my.sprite.blueEnemyGroup.add(enemSpr);
+        let enemSpr = new EnemyTwoHP(this, start[0], 60, "blueSq0", 0, hSprite, dSprite, "blueDie", start[1])
+        blueEnemyGroup.add(enemSpr);
     }
 }
+
 
 // A center-radius AABB collision check
     collides(a, b) {
@@ -297,7 +414,16 @@ wave1(thisParam){
     }
     
     reset(){
-        console.log("restart game");
+        // console.log("restart game");
+        this.points = 0;
+
+        this.redEnemyGroup = [];
+        this.blueEnemyGroup = [];
+        this.waveNum = 0;
+
+        // Timer
+        this.timer = 0;
+        this.numDeafeat = 0;
     }
 
 }
