@@ -14,6 +14,8 @@ class EnemyOneHP extends Phaser.GameObjects.Sprite {
         this.spriteKey = texture;
         this.endY = destY;
 
+        this.timer = 0;
+
         scene.add.existing(this);
 
         return this;
@@ -23,7 +25,8 @@ class EnemyOneHP extends Phaser.GameObjects.Sprite {
         if (this.active == true){
             // Decrease the amount of points while active and not killed
             // Goes no lower than 250
-            if (this.pts > 250){
+            this.timer++; //to make it decrease slower
+            if (this.timer%25 == 0 && this.pts > 250){
                 this.pts -= 10;
             }
 

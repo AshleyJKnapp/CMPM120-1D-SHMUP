@@ -1,16 +1,16 @@
+var points = 0;
 class PlayGame extends Phaser.Scene {
     constructor() {
         super("playScene");
         this.my = {sprite: {}};  // Create an object to hold sprite bindings
-
-        this.bulletCooldown = 5;        // Number of update() calls to wait before making a new bullet
+        
+        this.bulletCooldown = 4;        // Number of update() calls to wait before making a new bullet
         this.bulletCooldownCounter = 0;
         
-        this.points = 0;
-
+        
         // Movement speeds
         this.playerSpeed = 18;
-        this.playerBulletSpeed = 25;
+        this.playerBulletSpeed = 28;
 
         // Locations of enemies on a sort of grid
         this.gridArr = [
@@ -93,13 +93,16 @@ class PlayGame extends Phaser.Scene {
         this.reset();
         let my = this.my;   // create an alias to this.my for readability
 
+        // Instructions
+        document.getElementById('description').innerHTML = '<h3>SHMUP.js</h3>Decorate scraps of paper quickly to earn points<br>Decorating pink scraps gives health or bonus points! <br>Get through all the waves of enemies for a final score.<br>Temporary: ESC to pause and ESC to restart <br><h4>Controls</h4>Left: A or &#8592; <br>Right: D or &#8594; <br>Shoot: Spacebar';
+
         // --------== Background Tiles ==---------
         // my.sprite.bgBrown = this.add.tileSprite(64, 64, 0, 0, "bgBrown");  
         my.sprite.blueBG = this.add.tileSprite(0, 0, 1800, 1800, "bgBlue");
         // my.sprite.greenBG = this.add.tileSprite(0, 0, 1800, 1800, "bgGreen");
 
         // --------== Text ==---------
-        this.scoreTxt = this.add.text(game.config.width-430, game.config.height-80, this.points, {
+        this.scoreTxt = this.add.text(game.config.width-430, game.config.height-80, points, {
             fontFamily: "'Freeman'",
             fontSize: 50,
             align: "right",
@@ -300,9 +303,9 @@ class PlayGame extends Phaser.Scene {
                         enemy.onHit();
                     } else if (enemy.getHP() == 1){
                         enemy.onDeath();
-                        this.points += enemy.getPoint();
+                        points += enemy.getPoint();
                         this.numDeafeat++;
-                        this.scoreTxt.setText(this.points);
+                        this.scoreTxt.setText(points);
                     }
                     enemy.decHP()
                     // clear out bullet -- put y offscreen, will get reaped next update
@@ -315,14 +318,18 @@ class PlayGame extends Phaser.Scene {
                 if (enemy.active == true && this.collides(enemy, bullet)){
                     // console.log("enemy hit");
                     enemy.onDeath();
-                    this.points += enemy.getPoint();
+                    points += enemy.getPoint();
                     this.numDeafeat++;
-                    this.scoreTxt.setText(this.points);
+                    this.scoreTxt.setText(points);
                     enemy.decHP()
                     // clear out bullet -- put y offscreen, will get reaped next update
                     bullet.y = -100;
                 }
             }
+
+            // if (pinkEnemy.active == true && this.collides(pinkEnemy, bullet)){
+                
+            // }
             
         }
 
@@ -400,7 +407,7 @@ wave(thisParam, redEnemyGroup, blueEnemyGroup){
         let start = startArr[delIdx];
         startArr.splice(delIdx, 1)
         // Create enemy and add to group
-        let enemSpr = new EnemyTwoHP(this, start[0], 60, "blueSq0", 0, hSprite, dSprite, "blueDie", start[1])
+        let enemSpr = new EnemyTwoHP(this, start[0], -50, "blueSq0", 0, hSprite, dSprite, "blueDie", start[1])
         blueEnemyGroup.add(enemSpr);
     }
 }
@@ -415,7 +422,7 @@ wave(thisParam, redEnemyGroup, blueEnemyGroup){
     
     reset(){
         // console.log("restart game");
-        this.points = 0;
+        points = 0;
 
         this.redEnemyGroup = [];
         this.blueEnemyGroup = [];

@@ -19,6 +19,8 @@ class EnemyTwoHP extends Phaser.GameObjects.Sprite {
         this.hit1.x = this.x;
         this.hit1.y = this.y;
 
+        this.timer = 0;
+
         scene.add.existing(this);
 
         return this;
@@ -28,7 +30,8 @@ class EnemyTwoHP extends Phaser.GameObjects.Sprite {
         if (this.active == true){
             // Decrease the amount of points while active and not killed
             // Goes no lower than 250
-            if (this.pts > 500){
+            this.timer++; //to make it decrease slower
+            if (this.timer%25 == 0 && this.pts > 500){
                 this.pts -= 10;
             }
 
