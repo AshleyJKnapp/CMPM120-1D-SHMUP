@@ -1,11 +1,10 @@
 class EnemyTwoHP extends Phaser.GameObjects.Sprite {
-
     // x,y - starting sprite location
     // spriteKey / texture - key for the sprite image asset
     // spriteHit1 - key for next sprite to display on hit
     // animSprite - sprite for the death anim
     // animKey - key for the death anim
-    constructor(scene, x, y, texture, frame, spriteHit1, animSprite, animKey) {
+    constructor(scene, x, y, texture, frame, spriteHit1, animSprite, animKey, destY) {
     // constructor(scene, x, y, texture, frame) {
         super(scene, x, y, texture, frame);
 
@@ -15,6 +14,7 @@ class EnemyTwoHP extends Phaser.GameObjects.Sprite {
         this.animS = animSprite;
         this.animK = animKey;
         this.spriteKey = texture;
+        this.endY = destY;
         
         this.hit1.x = this.x;
         this.hit1.y = this.y;
@@ -25,16 +25,23 @@ class EnemyTwoHP extends Phaser.GameObjects.Sprite {
     }
 
     update() {
-        // Decrease the amount of points while active and not killed
-        // Goes no lower than 500
-        if (this.active == true && this.pts > 500){
-            this.pts--;
-        }
-        
-        // keep the 1hit sprite moving with the main one when visible
-        if (this.hit1.visible = true){
-            this.hit1.x = this.x;
-            this.hit1.y = this.y;
+        if (this.active == true){
+            // Decrease the amount of points while active and not killed
+            // Goes no lower than 250
+            if (this.pts > 500){
+                this.pts -= 10;
+            }
+
+            // While Active, move sprite down until at destination
+            if (this.y < this.endY){
+                this.y += 10;
+            }
+
+            // keep the 1hit sprite moving with the main one when visible
+            if (this.hit1.visible = true){
+                this.hit1.x = this.x;
+                this.hit1.y = this.y;
+            }
         }
     }
 

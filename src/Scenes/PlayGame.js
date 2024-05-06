@@ -14,8 +14,10 @@ class PlayGame extends Phaser.Scene {
 
         // Timer
         this.timer = 0;
-    }
 
+        this.numDeafeat = 0;
+    }
+// ----------------------------------------------------------------------------------------
     // Use preload to load art and sound assets before the scene starts running.
     preload() {
         // Assets from Kenny Assets
@@ -52,18 +54,19 @@ class PlayGame extends Phaser.Scene {
         // BG
         // this.load.image("bgBrown", "brownbg1.png");
         this.load.image("bgBlue", "bluebg1.png");
-        // this.load.image("bgGreen", "greebbg1.png");
+        // this.load.image("bgGreen", "greenbg1.png");
     }
-
+// ----------------------------------------------------------------------------------------
     create() {
         let my = this.my;   // create an alias to this.my for readability
 
         // --------== Background Tiles ==---------
         // my.sprite.bgBrown = this.add.tileSprite(64, 64, 0, 0, "bgBrown");  
         my.sprite.blueBG = this.add.tileSprite(0, 0, 1800, 1800, "bgBlue");
+        // my.sprite.greenBG = this.add.tileSprite(0, 0, 1800, 1800, "bgGreen");
 
         // --------== Text ==---------
-        this.add.text(game.config.width-430, game.config.height-80, this.points, {
+        this.scoreTxt = this.add.text(game.config.width-430, game.config.height-80, this.points, {
             fontFamily: "'Freeman'",
             fontSize: 50,
             align: "right",
@@ -84,105 +87,7 @@ class PlayGame extends Phaser.Scene {
         // -- Bullets --
         // (Space)
         this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
-
-        
-        // this.anims.create({
-        //     key: "blueSqua",
-        //     frames: [
-        //         { key: "blueSq0" },
-        //         { key: "blueSq1" },
-        //         { key: "blueSq2" },
-        //     ],
-        //     framerate: 1
-        // });
-
-        // my.sprite.blueSq = this.add.sprite(game.config.width/2, 60, "blueSq0").setFrame("blueSq3");
-        // // my.sprite.blueSq = this.blueSqua.setFrame("blueSq1");
-        
-        // -- Enemy --
-        my.sprite.blueA = this.add.sprite(50, 60, "blueSq0");
-        my.sprite.blueB = this.add.sprite(-50, 60, "blueSq1");
-        my.sprite.blueC = this.add.sprite(-50, 60, "blueSq2");
-        // my.sprite.blueD = this.add.sprite(game.config.width/2, 60, "blueSq3");
-        my.sprite.blueB.visible = false;
-        my.sprite.blueC.visible = false;
-        // my.sprite.blueD.visible = false;
-
-        this.anims.create({
-            key: "blueDie",
-            frames: [
-                { key: "blueDie0" },
-                { key: "blueDie1" },
-                { key: "blueDie2" },
-            ],
-            framerate: 1,
-            hideOnComplete: true
-        });
-
-        // testing class for 2hit enemy
-        // my.sprite.enemy2 = new EnemyTwoHP(this, game.config.width/2, 60, "blueSq0", 0, "blueSq1", "bluesq2", "blueDie");
-        this.BlueDeath = this.add.sprite(my.sprite.blueB.x, my.sprite.blueB.y, "blueDie0")
-        // my.sprite.enemy1A = new EnemyTwoHP(this, game.config.width-50, 60, "blueSq0", 0, my.sprite.blueB, this.BlueDeath, "blueDie");
-        
-        
-        
-        my.sprite.blueEnemyGroup = this.add.group({
-            // classType: EnemyTwoHP,
-            defaultKey: "blueSq0",
-            maxSize: 3
-        })
-        
-        // my.sprite.blueEnemyGroup = this.add.group();
-        // my.sprite.temp = new EnemyTwoHP(this, game.config.width/2, 60, "blueSq0", 0, my.sprite.blueB, this.BlueDeath, "blueDie")
-
-        // function EnemyTwoHP(game, x, y, frame){
-        //     Phaser.Sprite.call(this, game, x, y, "blueSq0", frame, my.sprite.blueB, this.BlueDeath, "blueDie")
-        // }
-
-        // my.sprite.blueEnemyGroup.add(new EnemyTwoHP(this, game.config.width/2, 60, "blueSq0", 0, my.sprite.blueB, this.BlueDeath, "blueDie"));
-        // my.sprite.blueEnemyGroup.add(new EnemyTwoHP(this, game.config.width/3, 150, "blueSq0", 0, my.sprite.blueB, this.BlueDeath, "blueDie"));
-        // my.sprite.blueEnemyGroup.add(new EnemyTwoHP(this, game.config.width-100, 150, "blueSq0", 0, my.sprite.blueB, this.BlueDeath, "blueDie"));
-        
-        // my.sprite.blueEnemyGroup.createMultiple({
-        //     classType: EnemyTwoHP,
-        //     active: false,
-        //     visible: true,
-        //     key: my.sprite.blueEnemyGroup.defaultKey
-        //     // x: game.config.width/2,
-        //     // y: 60,
-        //     // x: [game.config.width/2, game.config.width/3, game.config.width-100],
-        //     // y: [60, 150, 90],
-        //     // hit1: my.sprite.blueB,
-        //     // animS: this.BlueDeath,
-        //     // animK: "blueDie"
-        // })
-        let tmpArr = [game.config.width/2, game.config.width/3, game.config.width-100]
-        // let i = 0;
-        // for (let enemy of my.sprite.blueEnemyGroup.getChildren()){
-        //     enemy.hit1 = my.sprite.blueB;
-        //     enemy.animS = this.BlueDeath;
-        //     enemy.animK = "blueDie";
-        //     enemy.spriteKey = enemy.key;
-        //     // enemy.x = game.config.width/2;
-        //     enemy.x = tmpArr[i];
-        //     enemy.y = 60;
-        //     i++;
-        //     console.log("x is ", enemy.x);
-        // }
-        // my.sprite.blueEnemyGroup.hit1 = my.sprite.blueB;
-        // my.sprite.blueEnemyGroup.setAll("hit1", my.sprite.blueB);
-
-        // Manually add custum sprites to group
-        for (let i = 0; i < 3;  i++){
-            let hSprite = this.add.sprite(-50, 60, "blueSq1");
-            let decider = Math.floor(Math.random()*2);
-            if (decider) {
-                hSprite = this.add.sprite(-50, 60, "blueSq2");
-            }
-            let enemSpr = new EnemyTwoHP(this, tmpArr[i], 60, "blueSq0", 0, hSprite, this.BlueDeath, "blueDie")
-            my.sprite.blueEnemyGroup.add(enemSpr);
-        }
-
+    
 
         // --------== Objects ==-------
         // -- Initialize Player --
@@ -214,6 +119,9 @@ class PlayGame extends Phaser.Scene {
         });
         my.sprite.pBulletGroup.propertyValueSet("speed", this.playerBulletSpeed);
 
+        // --------== Spawning in waves ==----------
+        this.wave1(this);
+
         // -----= Menu =-----
         // (Esc)
         let escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC)
@@ -223,16 +131,22 @@ class PlayGame extends Phaser.Scene {
             this.scene.start('pauseScreen');
         })
     }
-
+// ----------------------------------------------------------------------------------------
     update() {
         let my = this.my;    // create an alias to this.my for readability
         this.timer++;
         this.bulletCooldownCounter--;
 
-        // BG Scroll
+        // BG Scroll Brown
+        // my.sprite.bgBrown.tilePositionY -= 8;
+        // my.sprite.bgBrown.tilePositionX += .5; 
+        // BG Scroll Blue
         my.sprite.blueBG.tilePositionY -= 8;
         my.sprite.blueBG.tilePositionX += .5; 
-
+        // BG Scroll Green
+        // my.sprite.greenBG.tilePositionY -= 8;
+        // my.sprite.greenBG.tilePositionX += .5; 
+        
         // Player Bullets
         // If we allow the player to press and hold
         if (this.spaceKey.isDown) {
@@ -250,9 +164,11 @@ class PlayGame extends Phaser.Scene {
         }
 
 
-        // Check for collision with blueA (0 -> 1 hit on 2hit enemy)
-        // my.sprite.bullet = my.sprite.bullet.filter((bullet) => bullet.y > -(bullet.displayHeight/2));
+
+
+        // Check for bullet hitting active enemy
         for (let bullet of my.sprite.pBulletGroup.getChildren()) {
+            // Check 2HP enemies
             for (let enemy of my.sprite.blueEnemyGroup.getChildren()){
                 if (enemy.active == true && this.collides(enemy, bullet)){
                     // console.log("enemy hit");
@@ -261,6 +177,8 @@ class PlayGame extends Phaser.Scene {
                     } else if (enemy.getHP() == 1){
                         enemy.onDeath();
                         this.points += enemy.getPoint();
+                        this.numDeafeat++;
+                        this.scoreTxt.setText(this.points);
                     }
                     enemy.decHP()
                     // clear out bullet -- put y offscreen, will get reaped next update
@@ -268,65 +186,110 @@ class PlayGame extends Phaser.Scene {
                 }
             }
 
-            for (let enemy of my.sprite.blueEnemyGroup.getChildren()){
+            // Check 1HP enemies
+            for (let enemy of my.sprite.redEnemyGroup.getChildren()){
                 if (enemy.active == true && this.collides(enemy, bullet)){
                     // console.log("enemy hit");
                     enemy.onDeath();
                     this.points += enemy.getPoint();
+                    this.numDeafeat++;
+                    this.scoreTxt.setText(this.points);
                     enemy.decHP()
                     // clear out bullet -- put y offscreen, will get reaped next update
                     bullet.y = -100;
                 }
             }
             
-            // if (this.collides(my.sprite.blueA, bullet)) {
-            //     // swap sprite on first hit
-            //     my.sprite.blueA.visible = false;
-            //     // let decider = Math.floor(Math.random()*2);
-            //     let decider = 1;
-            //     if (decider) {
-            //         // my.sprite.blueSq.setFrame("blueSq1")
-            //         my.sprite.blueB.visible = true;
-            //         my.sprite.blueB.x = my.sprite.blueA.x;
-            //         my.sprite.blueB.y = my.sprite.blueA.y;
-            //     } else {
-            //         // my.sprite.blueSq.setFrame("blueSq2")
-            //         my.sprite.blueC.visible = true;
-            //         my.sprite.blueC.x = my.sprite.blueA.x;
-            //         my.sprite.blueC.y = my.sprite.blueA.y;
-            //     }
-            //     // clear out bullet -- put y offscreen, will get reaped next update
-            //     my.sprite.blueA.x = -50;
-            //     bullet.y = -100;
-            // } 
-            // else if (this.collides(my.sprite.blueB, bullet) || this.collides(my.sprite.blueC, bullet)){
-            //     this.blueDie = this.add.sprite(my.sprite.blueB.x, my.sprite.blueB.y, "blueDie0").play("blueDie");
-
-            //     // my.sprite.enemy1A.animationSprite().x = my.sprite.enemy1A.x;
-            //     // my.sprite.enemy1A.animationSprite().y = my.sprite.enemy1A.y;
-            //     // my.sprite.enemy1A.visible = false;
-            //     // my.sprite.enemy1A.animationSprite().play(my.sprite.enemy1A.animationKey());
-            //     // my.sprite.enemy1A.onDeath();
-
-            //     my.sprite.blueB.visible = false;
-            //     // my.sprite.blueC.visible = false;
-            //     my.sprite.blueB.x = -100;
-            //     // my.sprite.blueC.x = -100;
-            //     this.blueDie.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-            //         this.my.sprite.blueB.visible = false;
-            //         // this.my.sprite.blueB.x = Math.random()*config.width;
-            //     }, this);
-            //     // clear out bullet -- put y offscreen, will get reaped next update
-            //     my.sprite.blueB.x = -50;
-            //     my.sprite.blueC.x = -50;
-            //     bullet.y = -100;
-            // }
         }
 
         my.sprite.player.update();
     }
+// ----------------------------------------------------------------------------------------
+// -------------------== WAVES ==-------------------
+wave1(thisParam){
+    let thisOG = thisParam;
+    let my = thisOG.my;
 
-    // A center-radius AABB collision check
+    // --------== 1HP ==--------
+    // Create death animation
+    thisOG.anims.create({
+        key: "redDie",
+        frames: [
+            { key: "redDie0" },
+            { key: "redDie1" },
+            { key: "redDie2" },
+        ],
+        framerate: 1,
+        hideOnComplete: true
+    });
+    
+    // Initial Location of all 3 Reds
+    let redStartArr = [[80, 50], [(game.config.width/2)-15, 350], [game.config.width-100, 150]]
+    
+    // Create Group
+    my.sprite.redEnemyGroup = thisOG.add.group({
+        // classType: EnemyTwoHP,
+        defaultKey: "redCir0",
+        maxSize: 4,
+        runChildUpdate: true
+    })
+
+    /// Manually add custom sprites to group
+    // For a sort of randomized element to the paths picked
+    // Random paths are picked from an array
+    // Paths are simple, moving from the top of the screen down to a fixed point
+    for (let i = 0; i < 3;  i++){
+        // Create sprites that are referenced by the enemy
+        let dSprite = thisOG.add.sprite(-50, -50, "redDie0");
+        // Create enemy and add to group
+        let enemSpr = new EnemyOneHP(thisOG, redStartArr[i][0], -50, "redCir0", 0, dSprite, "redDie", redStartArr[i][1])
+        my.sprite.redEnemyGroup.add(enemSpr);
+    }
+
+    // --------== 2HP ==--------
+    // Create death animation
+    this.anims.create({
+        key: "blueDie",
+        frames: [
+            { key: "blueDie0" },
+            { key: "blueDie1" },
+            { key: "blueDie2" },
+        ],
+        framerate: 1,
+        hideOnComplete: true
+    });
+    
+    // Initial Location of all 3 Blues
+    let blueStartArr = [[game.config.width/2, 250], [game.config.width/3, 50], [game.config.width-100, 350]]
+    
+    // Create Group
+    my.sprite.blueEnemyGroup = this.add.group({
+        // classType: EnemyTwoHP,
+        defaultKey: "blueSq0",
+        maxSize: 3,
+        runChildUpdate: true
+    })
+
+    /// Manually add custom sprites to group
+    // For a sort of randomized element to the paths picked
+    // Random paths are picked from an array
+    // Paths are simple, moving from the top of the screen down to a fixed point
+    for (let i = 0; i < 3;  i++){
+        // Create sprites that are referenced by the enemy
+        let hSprite = this.add.sprite(-50, -50, "blueSq1");
+        let dSprite = this.add.sprite(-50, -50, "blueDie0");
+        // Select randomly which hurt sprite to use
+        let decider = Math.floor(Math.random()*2);
+        if (decider) {
+            hSprite = this.add.sprite(-50, -50, "blueSq2");
+        }
+        // Create enemy and add to group
+        let enemSpr = new EnemyTwoHP(this, blueStartArr[i][0], 60, "blueSq0", 0, hSprite, dSprite, "blueDie", blueStartArr[i][1])
+        my.sprite.blueEnemyGroup.add(enemSpr);
+    }
+}
+
+// A center-radius AABB collision check
     collides(a, b) {
         if (Math.abs(a.x - b.x) > (a.displayWidth/2 + b.displayWidth/2)) return false;
         if (Math.abs(a.y - b.y) > (a.displayHeight/2 + b.displayHeight/2)) return false;
