@@ -7,10 +7,13 @@ class EnemyBullet extends Phaser.GameObjects.Sprite {
     }
 
     update() {
+
         if (this.active) {
             this.y += this.speed;
-            if (this.y > this.displayHeight/2) {
+            if (this.y > game.config.height+15) {
+                // console.log(this.displayHeight);
                 this.makeInactive();
+                // console.log("inactive bullet at "+this.y);
             }
         }
     }

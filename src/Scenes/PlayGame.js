@@ -7,11 +7,16 @@ class PlayGame extends Phaser.Scene {
         
         this.bulletCooldown = 4;        // Number of update() calls to wait before making a new bullet
         this.bulletCooldownCounter = 0;
+        this.enemyBulletCooldown = 4;        // Number of update() calls to wait before making a new bullet
+        this.enemyBulletCooldownCounter = 0;
         
-        
+        this.pHealthMax = 3;
+        this.playerHealth = this.pHealthMax;
+
         // Movement speeds
         this.playerSpeed = 18;
         this.playerBulletSpeed = 28;
+        this.enemyBulletSpeed = 28;
 
         // Locations of enemies on a sort of grid
         this.gridArr = [
@@ -83,6 +88,16 @@ class PlayGame extends Phaser.Scene {
         this.load.image("blueDie0", "blue-square-i-0.png");
         this.load.image("blueDie1", "blue-square-i-1.png");
         this.load.image("blueDie2", "blue-square-i-2.png");
+
+        // HP+ Enemy
+        this.load.image("pinkDia0", "pink-dia-0.png"); 
+        this.load.image("pinkDie0", "pink-dia-i-0.png"); 
+        this.load.image("pinkDie1", "pink-dia-i-1.png"); 
+        this.load.image("pinkDie2", "pink-dia-i-2.png"); 
+
+        // Player HP
+        this.load.image("fullHP", "heart0.png");
+        this.load.image("hurtHP", "heart1.png");
 
         // BG
         // this.load.image("bgBrown", "brownbg1.png");
@@ -156,6 +171,26 @@ class PlayGame extends Phaser.Scene {
         });
         my.sprite.pBulletGroup.propertyValueSet("speed", this.playerBulletSpeed);
 
+        // -- Enemy Bullets --
+        my.sprite.eBulletGroup = this.add.group({
+            defaultKey: "pinkDia0",
+            maxSize: 4,
+            runChildUpdate: true
+            }
+        )
+
+        // Create all of the bullets at once, and set them to inactive
+        // Taken from https://github.com/JimWhiteheadUCSC/BulletTime
+        my.sprite.eBulletGroup.createMultiple({
+            classType: EnemyBullet,
+            active: false,
+            visible: false,
+            key: my.sprite.eBulletGroup.defaultKey,
+            repeat: my.sprite.eBulletGroup.maxSize-1,
+            setScale: { x: .3, y: .3 }
+        });
+        my.sprite.eBulletGroup.propertyValueSet("speed", this.enemyBulletSpeed);
+
         // --------== ENEMIES ==----------
         // --------== 1HP ==--------
         // Create death animation
@@ -188,14 +223,14 @@ class PlayGame extends Phaser.Scene {
         my.sprite.redEnemyW3 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "redCir0",
-            maxSize: 1,
+            maxSize: 3,
             runChildUpdate: true
         })
         // Create Wave Group 4
         my.sprite.redEnemyW4 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "redCir0",
-            maxSize: 4,
+            maxSize: 6,
             runChildUpdate: true
         })
 
@@ -224,7 +259,7 @@ class PlayGame extends Phaser.Scene {
         my.sprite.blueEnemyW2 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "blueSq0",
-            maxSize: 1,
+            maxSize: 2,
             runChildUpdate: true
         })
         // Create Wave Group 3
@@ -242,6 +277,51 @@ class PlayGame extends Phaser.Scene {
             runChildUpdate: true
         })
 
+        // --------== HP restore ==--------
+        // Create death animation
+        this.anims.create({
+            key: "pinkDie",
+            frames: [
+                { key: "pinkDie0" },
+                { key: "pinkDie1" },
+                { key: "pinkDie2" },
+            ],
+            framerate: .5,
+            hideOnComplete: true
+        });
+
+        this.curvePoints = [
+            [(game.config.width/3)-15, -50,
+            (game.config.width/3)-15, 300,
+            -50, 350],
+            [(game.config.width-200), -50,
+            (game.config.width-200), 300,
+            (game.config.width+50), 350],
+            [(game.config.width/3), -50,
+            (game.config.width-200), 150,
+            (game.config.width+50), 350],
+            [(game.config.width-200), -50,
+            (game.config.width/3)-15, 200,
+            -50, 350],
+            [(game.config.width/3)-15, -50,
+            (game.config.width/2)-15, 150,
+            -50, 350],
+            [(game.config.width/6)-15, -40,
+            (game.config.width/2), 100,
+            (game.config.width-50), -40],
+            [(game.config.width-50), -40,
+            (game.config.width/2), 100,
+            (game.config.width/6)-15, -40]
+        ];
+        // Make an array of spline paths to choose from
+        this.pinkCurve = [];
+        for (let i = 0; i < this.curvePoints.length; i++){
+            this.pinkCurve.push(new Phaser.Curves.Spline(this.curvePoints[i]));
+        }
+        // randomly pick a spline path to follow
+        let randIdx = Math.floor(Math.random()*this.pinkCurve.length);
+        my.sprite.pinkEnem = this.add.follower(this.pinkCurve[randIdx], -250, -50, "pinkDia0");
+
         // --------== Spawn in first wave ==----------
         this.waveGroups = [[my.sprite.redEnemyW1, my.sprite.blueEnemyW1], [my.sprite.redEnemyW2, my.sprite.blueEnemyW2], [my.sprite.redEnemyW3, my.sprite.blueEnemyW3], [my.sprite.redEnemyW4, my.sprite.blueEnemyW4]]
         this.redEnemyGroup = this.waveGroups[0][0];
@@ -251,6 +331,20 @@ class PlayGame extends Phaser.Scene {
         this.waveSize = my.sprite.redEnemyW1.maxSize + my.sprite.blueEnemyW1.maxSize;
         
         
+        // --------== Player Health ==--------
+        // using arrays n stuff in case we want to change the amt of health given
+        my.sprite.heartFullArr = [];
+        my.sprite.heartHurtArr = [];
+        let heartXarr = [50, 110, 170];
+
+        for (let i = 0; i < this.pHealthMax; i++){
+            let hurtTemp = this.add.sprite(heartXarr[i], game.config.height-55, "hurtHP");
+            let fullTemp = this.add.sprite(heartXarr[i], game.config.height-55, "fullHP");
+            hurtTemp.setScale(.75);
+            fullTemp.setScale(.75);
+            my.sprite.heartHurtArr.push(hurtTemp);
+            my.sprite.heartFullArr.push(fullTemp);
+        }
 
         // -----= Menu =-----
         // (Esc)
@@ -268,7 +362,10 @@ class PlayGame extends Phaser.Scene {
     update() {
         let my = this.my;    // create an alias to this.my for readability
         this.timer++;
+        // Prevent overflow
+        if (this.timer == Number.MAX_SAFE_INTEGER-1){this.timer = 0}
         this.bulletCooldownCounter--;
+        this.enemyBulletCooldownCounter--;
         
         // BG Scroll Brown
         // my.sprite.bgBrown.tilePositionY -= 8;
@@ -280,8 +377,32 @@ class PlayGame extends Phaser.Scene {
         // my.sprite.greenBG.tilePositionY -= 8;
         // my.sprite.greenBG.tilePositionX += .5; 
         
+        // Every 500 ticks, a pink enemy appears
+        // We reuse the same pink enemy every time bc there is only one on screen at a time anyways
+        if (this.timer%50 == 0){
+            let followConfig = {
+                from: 0,
+                to: 1,
+                delay: 0,
+                duration: 2000,
+                ease: 'Sine.easeOut',
+                // ease: 'Sine.easeInOut',
+                repeat: 0,
+                yoyo: false
+                // rotateToPath: true,
+                // rotationOffset: -90
+            }
+            my.sprite.pinkEnem.visible = true;
+            // my.sprite.pinkEnem.active = true;
+
+            let randIdx = Math.floor(Math.random()*this.pinkCurve.length);
+            my.sprite.pinkEnem = this.add.follower(this.pinkCurve[randIdx], -250, -50, "pinkDia0");
+            my.sprite.pinkEnem.x = this.pinkCurve[randIdx].points[0].x;
+            my.sprite.pinkEnem.y = this.pinkCurve[randIdx].points[0].y;
+            my.sprite.pinkEnem.startFollow(followConfig);
+        }
+
         // Player Bullets
-        // If we allow the player to press and hold
         if (this.spaceKey.isDown) {
             if (this.bulletCooldownCounter < 0) {
                 // Get the first inactive bullet, and make it active
@@ -291,11 +412,46 @@ class PlayGame extends Phaser.Scene {
                     bullet.makeActive();
                     bullet.x = my.sprite.player.x-10;
                     bullet.y = my.sprite.player.y-57;
+                    bullet.makeActive();
+
                     this.bulletCooldownCounter = this.bulletCooldown;
                 }
             }
         }
 
+        // Set pinkEnem to inactive if out of bounds
+        // if in bounds then my.sprite.pinkEnem.active = true;
+        if ((my.sprite.pinkEnem.x > 0 || my.sprite.pinkEnem.y > 0)){
+            my.sprite.pinkEnem.active = true;
+        } else {
+            my.sprite.pinkEnem.active = false;
+        }
+
+        // Enemy Bullets
+        if ((this.timer-(Math.floor(1+Math.random()*50)))%10 == 0) {
+        // if (true) { //debugging
+            // if ((this.timer-15)%10 == 0) {
+            if (my.sprite.pinkEnem.active == true) {
+                // for (let bullet of my.sprite.eBulletGroup.getChildren()) {
+                //     bullet.makeActive();
+                //     bullet.x = my.sprite.pinkEnem.x+20;
+                //     bullet.y = my.sprite.pinkEnem.y+20;
+                // }
+                if (this.enemyBulletCooldownCounter < 0) {
+                    // Get the first inactive bullet, and make it active
+                    let bullet = my.sprite.eBulletGroup.getFirstDead(true);
+                    // bullet will be null if there are no inactive (available) bullets
+                    if (bullet != null) {
+                        bullet.makeActive();
+                        bullet.x = my.sprite.pinkEnem.x+20;
+                        bullet.y = my.sprite.pinkEnem.y+20;
+                        bullet.makeActive();
+    
+                        this.enemyBulletCooldownCounter = this.enemyBulletCooldown;
+                    }
+                }
+            }
+        }
 
         // Check for bullet hitting active enemy
         for (let bullet of my.sprite.pBulletGroup.getChildren()) {
@@ -331,13 +487,27 @@ class PlayGame extends Phaser.Scene {
                 }
             }
 
-            // if (pinkEnemy.active == true && this.collides(pinkEnemy, bullet)){
-
-            // }
-            
+            // Check HP+ enemy
+            if (bullet.active == true && my.sprite.pinkEnem.active == true && this.collides(my.sprite.pinkEnem, bullet)){
+                if (this.playerHealth == this.pHealthMax){
+                    points += 1000;
+                } else {
+                    this.playerHealth++;
+                }
+                this.scoreTxt.setText(points);
+                bullet.y = -100;
+                this.add.sprite(my.sprite.pinkEnem.x, my.sprite.pinkEnem.y, "pinkDie0").play("pinkDie");
+                my.sprite.pinkEnem.x = -250;
+                my.sprite.pinkEnem.y = -150;
+                my.sprite.pinkEnem.active = false;
+                // might make a lot of new objects that need to be cleaned (not fixed rn)
+                // let randIdx = Math.floor(Math.random()*this.curvePoints.length);
+                // this.pinkCurve = new Phaser.Curves.Spline(this.curvePoints[randIdx]);
+                // my.sprite.pinkEnem = this.add.follower(this.pinkCurve, -50, -50, "pinkDia0");
+            }
         }
 
-        // Select current active wave
+        // Select next active wave if previous is complete
         if (this.waveSize == this.numDeafeat) {
             this.waveNum++;
             // If game is complete: stop
@@ -364,6 +534,36 @@ class PlayGame extends Phaser.Scene {
             }
         }
         
+        // Check if player got hit
+        for (let eBull of my.sprite.eBulletGroup.getChildren()){
+            if (this.collides(my.sprite.player, eBull)){
+                // console.log(my.sprite.player.x+" and "+my.sprite.eBulletGroup);
+                this.playerHealth--;
+                // eBull.active = false;
+                eBull.x = -600;
+            }
+        }
+        
+        // End game if out of health
+        if (this.playerHealth <= 0){
+            if (points > highScore){
+                highScore = points;
+            }
+            this.scene.start('endScreen');
+        }
+        
+        // Update the hearts shown
+        if (this.playerHealth > 0){
+            // Set the hearts to visible
+            for (let i = 0; i < this.playerHealth; i++){
+                my.sprite.heartFullArr[i].visible = true;
+            }
+            // Set the remaining full hearts to invisible
+            for (let i = this.playerHealth; i < this.pHealthMax; i++){
+                my.sprite.heartFullArr[i].visible = false;
+            }
+        }
+
         my.sprite.player.update();
     }
 // ----------------------------------------------------------------------------------------
@@ -434,6 +634,8 @@ wave(thisParam, redEnemyGroup, blueEnemyGroup){
         this.redEnemyGroup = [];
         this.blueEnemyGroup = [];
         this.waveNum = 0;
+
+        this.playerHealth = this.pHealthMax;
 
         // Timer
         this.timer = 0;
