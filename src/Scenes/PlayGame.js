@@ -5,7 +5,7 @@ class PlayGame extends Phaser.Scene {
         super("playScene");
         this.my = {sprite: {}};  // Create an object to hold sprite bindings
         
-        this.bulletCooldown = 4;        // Number of update() calls to wait before making a new bullet
+        this.bulletCooldown = 6;        // Number of update() calls to wait before making a new bullet
         this.bulletCooldownCounter = 0;
         this.enemyBulletCooldown = 4;        // Number of update() calls to wait before making a new bullet
         this.enemyBulletCooldownCounter = 0;
@@ -110,12 +110,14 @@ class PlayGame extends Phaser.Scene {
         let my = this.my;   // create an alias to this.my for readability
 
         // Instructions
-        document.getElementById('description').innerHTML = '<h3>SHMUP.js</h3>Decorate scraps of paper quickly to earn points<br>Decorating pink scraps gives health or bonus points! <br>Get through all the waves of enemies for a final score.<br>Temporary: ESC to pause and ESC to restart <br><h4>Controls</h4>Left: A or &#8592; <br>Right: D or &#8594; <br>Shoot: Spacebar';
+        document.getElementById('description').innerHTML = '<h3>SHMUP.js</h3>Decorate scraps of paper quickly to earn points<br>Decorating pink scraps gives health or bonus points! <br>Get through all the waves of enemies for a final score. <br><h4>Controls</h4>Left: A or &#8592; <br>Right: D or &#8594; <br>Shoot: Spacebar';
 
         // --------== Background Tiles ==---------
         // my.sprite.bgBrown = this.add.tileSprite(64, 64, 0, 0, "bgBrown");  
         my.sprite.blueBG = this.add.tileSprite(0, 0, 1800, 1800, "bgBlue");
         // my.sprite.greenBG = this.add.tileSprite(0, 0, 1800, 1800, "bgGreen");
+
+        my.sprite.GUIBG = this.add.rectangle(game.config.width/2, game.config.height, game.config.width, 200, 0xFF70B4, 0.4);
 
         // --------== Text ==---------
         this.scoreTxt = this.add.text(game.config.width-430, game.config.height-80, points, {
@@ -124,6 +126,12 @@ class PlayGame extends Phaser.Scene {
             align: "right",
             fixedWidth: 400,
             fixedHeight: 50
+        });
+        this.waveTxt = this.add.text(game.config.width/2-25, game.config.height-80, "Wave\n"+this.waveNum+"/"+this.maxWaves, {
+            fontFamily: "'Freeman'",
+            fontSize: 25,
+            align: "center",
+            fixedHeight: 150
         });
 
         // ------== Key Objects ==------
@@ -174,7 +182,7 @@ class PlayGame extends Phaser.Scene {
         // -- Enemy Bullets --
         my.sprite.eBulletGroup = this.add.group({
             defaultKey: "pinkDia0",
-            maxSize: 4,
+            maxSize: 10,
             runChildUpdate: true
             }
         )
@@ -223,14 +231,14 @@ class PlayGame extends Phaser.Scene {
         my.sprite.redEnemyW3 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "redCir0",
-            maxSize: 3,
+            maxSize: 5,
             runChildUpdate: true
         })
         // Create Wave Group 4
         my.sprite.redEnemyW4 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "redCir0",
-            maxSize: 6,
+            maxSize: 5,
             runChildUpdate: true
         })
 
@@ -252,28 +260,28 @@ class PlayGame extends Phaser.Scene {
         my.sprite.blueEnemyW1 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "blueSq0",
-            maxSize: 1,
+            maxSize: 2,
             runChildUpdate: true
         })
         // Create Wave Group 2
         my.sprite.blueEnemyW2 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "blueSq0",
-            maxSize: 2,
+            maxSize: 3,
             runChildUpdate: true
         })
         // Create Wave Group 3
         my.sprite.blueEnemyW3 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "blueSq0",
-            maxSize: 3,
+            maxSize: 4,
             runChildUpdate: true
         })
         // Create Wave Group 4
         my.sprite.blueEnemyW4 = this.add.group({
             // classType: EnemyTwoHP,
             defaultKey: "blueSq0",
-            maxSize: 4,
+            maxSize: 6,
             runChildUpdate: true
         })
 
@@ -290,6 +298,7 @@ class PlayGame extends Phaser.Scene {
             hideOnComplete: true
         });
 
+        // This is probably something that should be read from a .json file or something
         this.curvePoints = [
             [(game.config.width/3)-15, -50,
             (game.config.width/3)-15, 300,
@@ -306,12 +315,31 @@ class PlayGame extends Phaser.Scene {
             [(game.config.width/3)-15, -50,
             (game.config.width/2)-15, 150,
             -50, 350],
+            // The following are pasted several times to increase probability
             [(game.config.width/6)-15, -40,
             (game.config.width/2), 100,
             (game.config.width-50), -40],
             [(game.config.width-50), -40,
             (game.config.width/2), 100,
-            (game.config.width/6)-15, -40]
+            (game.config.width/6)-15, -40],
+            [(game.config.width/6)-15, -40,
+            (game.config.width/2), 100,
+            (game.config.width-50), -40],
+            [(game.config.width-50), -40,
+            (game.config.width/2), 100,
+            (game.config.width/6)-15, -40],
+            [(game.config.width/6)-15, -40,
+            (game.config.width/2), 100,
+            (game.config.width-50), -40],
+            [(game.config.width-50), -40,
+            (game.config.width/2), 100,
+            (game.config.width/6)-15, -40],
+            [(game.config.width/6)-15, -40,
+            (game.config.width/2), 100,
+            (game.config.width-50), -40],
+            [(game.config.width-50), -40,
+            (game.config.width/2), 100,
+            (game.config.width/6)-15, -40],
         ];
         // Make an array of spline paths to choose from
         this.pinkCurve = [];
@@ -338,25 +366,25 @@ class PlayGame extends Phaser.Scene {
         let heartXarr = [50, 110, 170];
 
         for (let i = 0; i < this.pHealthMax; i++){
-            let hurtTemp = this.add.sprite(heartXarr[i], game.config.height-55, "hurtHP");
-            let fullTemp = this.add.sprite(heartXarr[i], game.config.height-55, "fullHP");
+            let hurtTemp = this.add.sprite(heartXarr[i], game.config.height-50, "hurtHP");
+            let fullTemp = this.add.sprite(heartXarr[i], game.config.height-50, "fullHP");
             hurtTemp.setScale(.75);
             fullTemp.setScale(.75);
             my.sprite.heartHurtArr.push(hurtTemp);
             my.sprite.heartFullArr.push(fullTemp);
         }
 
-        // -----= Menu =-----
-        // (Esc)
-        let escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC)
-        escKey.on('down', (key, event) => {
-            // console.log("esc key");
-            if (points > highScore){
-                highScore = points;
-            }
-            // this.scene.pause();
-            this.scene.start('endScreen');
-        })
+        // -----= Menu =----- (debug)
+        // (Esc) 
+        // let escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC)
+        // escKey.on('down', (key, event) => {
+        //     // console.log("esc key");
+        //     if (points > highScore){
+        //         highScore = points;
+        //     }
+        //     // this.scene.pause();
+        //     this.scene.start('endScreen');
+        // })
     }
 // ----------------------------------------------------------------------------------------
     update() {
