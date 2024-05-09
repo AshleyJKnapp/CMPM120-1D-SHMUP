@@ -59,6 +59,9 @@ class PlayGame extends Phaser.Scene {
         // https://kenney.nl/assets/googly-eyes
         // https://kenney.nl/assets/shape-characters
         // https://kenney.nl/assets/rolling-ball-assets
+        // Audio
+        // https://kenney.nl/assets/music-jingles
+        // https://kenney.nl/assets/impact-sounds
         // Some assets are edited (googly eyes onto shapes, shape animation images squished)
         // Heart asset created by me
         // All edits and assets by me took less than 10 mins time total
@@ -103,6 +106,14 @@ class PlayGame extends Phaser.Scene {
         // this.load.image("bgBrown", "brownbg1.png");
         this.load.image("bgBlue", "bluebg1.png");
         // this.load.image("bgGreen", "greenbg1.png");
+
+        // SFX
+        this.load.audio("hitSFX", "impactTin.ogg");
+        this.load.audio("winSFX", "jingles_HAPPY.ogg");
+        this.load.audio("loseSFX", "jingles_SAD.ogg");
+        this.load.audio("shootSFX", "shootWood.ogg");
+        this.load.audio("pHitSFX", "impactPlate.ogg");
+        this.load.audio("eShootSFX", "impactSoft.ogg");
     }
 // ----------------------------------------------------------------------------------------
     create() {
@@ -437,6 +448,7 @@ class PlayGame extends Phaser.Scene {
                 let bullet = my.sprite.pBulletGroup.getFirstDead();
                 // bullet will be null if there are no inactive (available) bullets
                 if (bullet != null) {
+                    this.sound.play("shootSFX");
                     bullet.makeActive();
                     bullet.x = my.sprite.player.x-10;
                     bullet.y = my.sprite.player.y-57;
@@ -470,6 +482,7 @@ class PlayGame extends Phaser.Scene {
                     let bullet = my.sprite.eBulletGroup.getFirstDead(true);
                     // bullet will be null if there are no inactive (available) bullets
                     if (bullet != null) {
+                        this.sound.play("eShootSFX");
                         bullet.makeActive();
                         bullet.x = my.sprite.pinkEnem.x+20;
                         bullet.y = my.sprite.pinkEnem.y+20;
@@ -486,6 +499,7 @@ class PlayGame extends Phaser.Scene {
             // Check 2HP enemies
             for (let enemy of this.blueEnemyGroup.getChildren()){
                 if (enemy.active == true && this.collides(enemy, bullet)){
+                    this.sound.play("hitSFX");
                     // console.log("enemy hit");
                     if (enemy.getHP() == 2){
                         enemy.onHit();
@@ -504,6 +518,7 @@ class PlayGame extends Phaser.Scene {
             // Check 1HP enemies
             for (let enemy of this.redEnemyGroup.getChildren()){
                 if (enemy.active == true && this.collides(enemy, bullet)){
+                    this.sound.play("hitSFX");
                     // console.log("enemy hit");
                     enemy.onDeath();
                     points += enemy.getPoint();
@@ -517,6 +532,7 @@ class PlayGame extends Phaser.Scene {
 
             // Check HP+ enemy
             if (bullet.active == true && my.sprite.pinkEnem.active == true && this.collides(my.sprite.pinkEnem, bullet)){
+                this.sound.play("hitSFX");
                 if (this.playerHealth == this.pHealthMax){
                     points += 1000;
                 } else {
@@ -544,6 +560,7 @@ class PlayGame extends Phaser.Scene {
                 if (points > highScore){
                     highScore = points;
                 }
+                this.sound.play("winSFX");
                 this.scene.start('endScreen');
             } else {
                 this.numDeafeat = 0;
@@ -565,6 +582,7 @@ class PlayGame extends Phaser.Scene {
         // Check if player got hit
         for (let eBull of my.sprite.eBulletGroup.getChildren()){
             if (this.collides(my.sprite.player, eBull)){
+                this.sound.play("pHitSFX");
                 // console.log(my.sprite.player.x+" and "+my.sprite.eBulletGroup);
                 this.playerHealth--;
                 // eBull.active = false;
@@ -577,6 +595,7 @@ class PlayGame extends Phaser.Scene {
             if (points > highScore){
                 highScore = points;
             }
+            this.sound.play("loseSFX");
             this.scene.start('endScreen');
         }
         
